@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NASA - Ảnh của Ngày</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      overflow: hidden;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+      color: white;
+      padding: 30px;
+      text-align: center;
+    }
+
+    .header h1 {
+      font-size: 2.5em;
+      margin-bottom: 10px;
+    }
+
+    .header p {
+      font-size: 1.1em;
+      opacity: 0.9;
+    }
+
+    .content {
+      padding: 40px;
+    }
+
+    .alert {
+      padding: 15px 20px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      font-weight: 500;
+    }
+
+    .alert-success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+
+    .alert-error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+
+    .alert-info {
+      background: #d1ecf1;
+      color: #0c5460;
+      border: 1px solid #bee5eb;
+    }
+
+    .image-section {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    #img-of-the-day {
+      max-width: 100%;
+      height: auto;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+
+    #loading {
+      font-size: 1.2em;
+      color: #667eea;
+      padding: 40px;
+    }
+
+    .comment-form {
+      background: #f8f9fa;
+      padding: 30px;
+      border-radius: 15px;
+      margin-bottom: 40px;
+    }
+
+    .comment-form h2 {
+      color: #1e3c72;
+      margin-bottom: 20px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 8px;
+    }
+
+    .form-group input[type="text"],
+    .form-group input[type="file"],
+    .form-group textarea {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 1em;
+      transition: border-color 0.3s;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .form-group textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    .error-message {
+      color: #dc3545;
+      font-size: 0.9em;
+      margin-top: 5px;
+    }
+
+    .rating-group {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .rating-btn {
+      padding: 10px 20px;
+      border: 2px solid #e0e0e0;
+      background: white;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1.2em;
+      transition: all 0.3s;
+    }
+
+    .rating-btn:hover {
+      border-color: #667eea;
+      background: #f0f0ff;
+    }
+
+    .rating-btn.active {
+      background: #667eea;
+      color: white;
+      border-color: #667eea;
+    }
+
+    .submit-btn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 15px 40px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1.1em;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .submit-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .file-upload-info {
+      font-size: 0.9em;
+      color: #666;
+      margin-top: 5px;
+    }
+
+    .comments-section h2 {
+      color: #1e3c72;
+      margin-bottom: 30px;
+    }
+
+    .comment-card {
+      background: #f8f9fa;
+      padding: 25px;
+      border-radius: 15px;
+      margin-bottom: 20px;
+      border-left: 5px solid #667eea;
+    }
+
+    .comment-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .comment-author {
+      font-weight: 600;
+      font-size: 1.1em;
+      color: #1e3c72;
+    }
+
+    .comment-rating {
+      color: #ffc107;
+      font-size: 1.2em;
+    }
+
+    .comment-text {
+      color: #555;
+      line-height: 1.6;
+      margin-bottom: 15px;
+    }
+
+    .comment-image {
+      max-width: 300px;
+      border-radius: 8px;
+      margin: 15px 0;
+    }
+
+    .comment-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .comment-time {
+      color: #999;
+      font-size: 0.9em;
+    }
+
+    .comment-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .like-btn, .delete-btn {
+      background: white;
+      border: 2px solid #e0e0e0;
+      padding: 8px 20px;
+      border-radius: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.3s;
+      font-size: 0.95em;
+    }
+
+    .like-btn:hover {
+      border-color: #667eea;
+      background: #f0f0ff;
+    }
+
+    .delete-btn:hover {
+      border-color: #dc3545;
+      background: #fff5f5;
+      color: #dc3545;
+    }
+
+    .no-comments {
+      text-align: center;
+      color: #999;
+      padding: 40px;
+      font-size: 1.1em;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>🌌 NASA Astronomy Picture of the Day</h1>
+    <p>Khám phá vũ trụ mỗi ngày với một bức ảnh mới</p>
+  </div>
+
+  <div class="content">
+    <!-- Alert Messages -->
+    <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+    <div th:if="${errorMessage}" class="alert alert-error" th:text="${errorMessage}"></div>
+    <div th:if="${likeMessage}" class="alert alert-info" th:text="${likeMessage}"></div>
+
+    <!-- NASA Image -->
+    <div class="image-section">
+      <div id="loading">Đang tải ảnh của ngày...</div>
+      <img id="img-of-the-day" style="display:none;" alt="NASA Picture of the Day">
+    </div>
+
+    <!-- Comment Form with Data Binding -->
+    <div class="comment-form">
+      <h2>Đánh giá và Bình luận</h2>
+      <form th:action="@{/comment/add}" th:object="${comment}" method="post" enctype="multipart/form-data">
+
+        <div class="form-group">
+          <label for="authorName">Tên của bạn:</label>
+          <input type="text" id="authorName" th:field="*{authorName}" placeholder="Nhập tên của bạn">
+          <div class="error-message" th:if="${#fields.hasErrors('authorName')}" th:errors="*{authorName}"></div>
+        </div>
+
+        <div class="form-group">
+          <label>Đánh giá (1-5 sao):</label>
+          <div class="rating-group">
+            <button type="button" class="rating-btn" data-rating="1">⭐ 1</button>
+            <button type="button" class="rating-btn" data-rating="2">⭐ 2</button>
+            <button type="button" class="rating-btn" data-rating="3">⭐ 3</button>
+            <button type="button" class="rating-btn" data-rating="4">⭐ 4</button>
+            <button type="button" class="rating-btn" data-rating="5">⭐ 5</button>
+          </div>
+          <input type="hidden" id="rating" th:field="*{rating}">
+          <div class="error-message" th:if="${#fields.hasErrors('rating')}" th:errors="*{rating}"></div>
+        </div>
+
+        <div class="form-group">
+          <label for="commentText">Nhận xét:</label>
+          <textarea id="commentText" th:field="*{commentText}" placeholder="Chia sẻ suy nghĩ của bạn về bức ảnh này..."></textarea>
+          <div class="error-message" th:if="${#fields.hasErrors('commentText')}" th:errors="*{commentText}"></div>
+        </div>
+
+        <!-- MultipartFile Upload -->
+        <div class="form-group">
+          <label for="imageFile">Đính kèm ảnh (tùy chọn):</label>
+          <input type="file" id="imageFile" name="imageFile" accept="image/*">
+          <div class="file-upload-info">Chỉ chấp nhận file ảnh, tối đa 5MB</div>
+        </div>
+
+        <button type="submit" class="submit-btn">Gửi đánh giá</button>
+      </form>
+    </div>
+
+    <!-- Comments Section -->
+    <div class="comments-section">
+      <h2>Đánh giá hôm nay (<span th:text="${#lists.size(comments)}">0</span>)</h2>
+
+      <div th:if="${#lists.isEmpty(comments)}" class="no-comments">
+        Chưa có đánh giá nào trong ngày hôm nay. Hãy là người đầu tiên! 🚀
+      </div>
+
+      <div th:each="c : ${comments}" class="comment-card">
+        <div class="comment-header">
+          <span class="comment-author" th:text="${c.authorName}">Author</span>
+          <span class="comment-rating">
+                            <span th:each="i : ${#numbers.sequence(1, c.rating)}">⭐</span>
+                        </span>
+        </div>
+        <div class="comment-text" th:text="${c.commentText}">Comment text</div>
+
+        <!-- Display uploaded image if exists -->
+        <img th:if="${c.imagePath}"
+             th:src="@{'/uploads/' + ${c.imagePath}}"
+             class="comment-image"
+             alt="User uploaded image">
+
+        <div class="comment-footer">
+                        <span class="comment-time">
+                            <span th:text="${c.createdAt.hour}">00</span>:<span th:text="${c.createdAt.minute < 10 ? '0' + c.createdAt.minute : c.createdAt.minute}">00</span>
+                        </span>
+          <div class="comment-actions">
+            <!-- Like Button -->
+            <form th:action="@{/comment/like}" method="post" style="display:inline;">
+              <input type="hidden" name="commentId" th:value="${c.id}">
+              <button type="submit" class="like-btn">
+                ❤️ <span th:text="${c.likeCount}">0</span>
+              </button>
+            </form>
+
+            <!-- Delete Button -->
+            <form th:action="@{'/comment/delete/' + ${c.id}}" method="post" style="display:inline;">
+              <button type="submit" class="delete-btn" onclick="return confirm('Bạn có chắc muốn xóa bình luận này?')">
+                🗑️ Xóa
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script th:inline="javascript">
+  /*<![CDATA[*/
+  // Load NASA APOD
+  const nasaApiKey = /*[[${nasaApiKey}]]*/ '';
+  const nasaApiUrl = /*[[${nasaApiUrl}]]*/ '';
+  let query = nasaApiUrl + '?api_key=' + nasaApiKey;
+
+  let request = new XMLHttpRequest();
+  request.open('GET', query);
+  request.onload = function() {
+    if (request.status === 200) {
+      let response = JSON.parse(request.responseText);
+      let img = document.getElementById('img-of-the-day');
+      img.setAttribute('src', response.url);
+      img.style.display = 'block';
+      document.getElementById('loading').style.display = 'none';
+    }
+  };
+  request.send();
+
+  // Rating buttons
+  const ratingBtns = document.querySelectorAll('.rating-btn');
+  const ratingInput = document.getElementById('rating');
+
+  ratingBtns.forEach(btn => {
+    btn.addEventListener('click', function() {
+      ratingBtns.forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      ratingInput.value = this.dataset.rating;
+    });
+  });
+
+  // Set active rating if exists
+  const currentRating = ratingInput.value;
+  if (currentRating) {
+    ratingBtns.forEach(btn => {
+      if (btn.dataset.rating === currentRating) {
+        btn.classList.add('active');
+      }
+    });
+  }
+  /*]]>*/
+</script>
+</body>
+</html>

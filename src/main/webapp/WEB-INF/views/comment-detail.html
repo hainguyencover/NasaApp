@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chi tiết Bình luận - NASA APOD</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        h1 {
+            color: #1e3c72;
+            margin-bottom: 30px;
+        }
+
+        .detail-card {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            border-left: 5px solid #667eea;
+        }
+
+        .detail-header {
+            margin-bottom: 20px;
+        }
+
+        .author {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #1e3c72;
+        }
+
+        .rating {
+            color: #ffc107;
+            font-size: 1.5em;
+            margin: 10px 0;
+        }
+
+        .comment-text {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #555;
+            margin: 20px 0;
+        }
+
+        .comment-image {
+            max-width: 100%;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .meta-info {
+            color: #999;
+            font-size: 0.95em;
+            margin-top: 20px;
+        }
+
+        .like-count {
+            font-size: 1.2em;
+            color: #667eea;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <a th:href="@{/}" class="back-link">← Quay lại trang chủ</a>
+
+    <h1>Chi tiết Bình luận</h1>
+
+    <div class="detail-card" th:if="${comment}">
+        <div class="detail-header">
+            <div class="author" th:text="${comment.authorName}">Author Name</div>
+            <div class="rating">
+                <span th:each="i : ${#numbers.sequence(1, comment.rating)}">⭐</span>
+            </div>
+        </div>
+
+        <div class="comment-text" th:text="${comment.commentText}">Comment text</div>
+
+        <img th:if="${comment.imagePath}"
+             th:src="@{'/uploads/' + ${comment.imagePath}}"
+             class="comment-image"
+             alt="User uploaded image">
+
+        <div class="meta-info">
+            <div>Ngày đăng: <span th:text="${#temporals.format(comment.commentDate, 'dd/MM/yyyy')}"></span></div>
+            <div>Thời gian: <span th:text="${#temporals.format(comment.createdAt, 'HH:mm:ss')}"></span></div>
+        </div>
+
+        <div class="like-count">
+            ❤️ <span th:text="${comment.likeCount}">0</span> lượt thích
+        </div>
+    </div>
+
+    <div th:unless="${comment}">
+        <p>Không tìm thấy bình luận này.</p>
+    </div>
+</div>
+</body>
+</html>
