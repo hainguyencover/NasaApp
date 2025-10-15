@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+</head>
+<body>
+
+<!-- Pagination Fragment -->
+<div th:fragment="pagination(page, baseUrl)" class="pagination-container">
+
+    <!-- Pagination Info -->
+    <div class="pagination-info">
+        <span>
+            Hiển thị
+            <strong th:text="${page.pageNumber * page.pageSize + 1}">1</strong>
+            -
+            <strong th:text="${page.pageNumber * page.pageSize + page.numberOfElements}">10</strong>
+            trong tổng số
+            <strong th:text="${page.totalElements}">100</strong>
+            bình luận
+        </span>
+    </div>
+
+    <!-- Pagination Controls -->
+    <div class="pagination-controls" th:if="${page.totalPages > 1}">
+        <ul class="pagination">
+
+            <!-- Previous Button -->
+            <li th:classappend="${page.isFirst() ? 'disabled' : ''}">
+                <a th:if="${!page.isFirst()}"
+                   th:href="@{${baseUrl}(page=${page.pageNumber - 1}, size=${page.pageSize}, sortBy=${sortBy}, direction=${direction}, filter=${filter}, date=${selectedDate})}"
+                   class="page-link">
+                    <span>&laquo; Trước</span>
+                </a>
+                <span th:if="${page.isFirst()}" class="page-link disabled">
+                    <span>&laquo; Trước</span>
+                </span>
+            </li>
+
+            <!-- First Page -->
+            <li th:if="${page.pageNumber > 2}">
+                <a th:href="@{${baseUrl}(page=0, size=${page.pageSize}, sortBy=${sortBy}, direction=${direction}, filter=${filter}, date=${selectedDate})}"
+                   class="page-link">1</a>
+            </li>
+
+            <!-- Ellipsis -->
+            <li th:if="${page.pageNumber > 3}" class="disabled">
+                <span class="page-link">...</span>
+            </li>
+
+            <!-- Page Numbers (show current ± 2 pages) -->
+            <th:block th:each="i : ${#numbers.sequence(
+                (page.pageNumber - 2 < 0 ? 0 : page.pageNumber - 2),
+                (page.pageNumber + 2 >= page.totalPages ? page.totalPages - 1 : page.pageNumber + 2)
+            )}">
+                <li th:classappend="${i == page.pageNumber ? 'active' : ''}">
+                    <a th:if="${i != page.pageNumber}"
+                       th:href="@{${baseUrl}(page=${i}, size=${page.pageSize}, sortBy=${sortBy}, direction=${direction}, filter=${filter}, date=${selectedDate})}"
+                       th:text="${i + 1}"
+                       class="page-link">1</a>
+                    <span th:if="${i == page.pageNumber}"
+                          th:text="${i + 1}"
+                          class="page-link active">1</span>
+                </li>
+            </th:block>
+
+            <!-- Ellipsis -->
+            <li th:if="${page.pageNumber < page.totalPages - 4}" class="disabled">
+                <span class="page-link">...</span>
+            </li>
+
+            <!-- Last Page -->
+            <li th:if="${page.pageNumber < page.totalPages - 3}">
+                <a th:href="@{${baseUrl}(page=${page.totalPages - 1}, size=${page.pageSize}, sortBy=${sortBy}, direction=${direction}, filter=${filter}, date=${selectedDate})}"
+                   th:text="${page.totalPages}"
+                   class="page-link">10</a>
+            </li>
+
+            <!-- Next Button -->
+            <li th:classappend="${page.isLast() ? 'disabled' : ''}">
+                <a th:if="${!page.isLast()}"
+                   th:href="@{${baseUrl}(page=${page.pageNumber + 1}, size=${page.pageSize}, sortBy=${sortBy}, direction=${direction}, filter=${filter}, date=${selectedDate})}"
+                   class="page-link">
+                    <span>Sau &raquo;</span>
+                </a>
+                <span th:if="${page.isLast()}" class="page-link disabled">
+                    <span>Sau &raquo;</span>
+                </span>
+            </li>
+
+        </ul>
+    </div>
+
+    <!-- Page Size Selector -->
+    <div class="page-size-selector">
+        <label>Hiển thị:</label>
+        <select id="pageSizeSelect" onchange="changePageSize(this.value)">
+            <option th:selected="${page.pageSize == 5}" value="5">5</option>
+            <option th:selected="${page.pageSize == 10}" value="10">10</option>
+            <option th:selected="${page.pageSize == 20}" value="20">20</option>
+            <option th:selected="${page.pageSize == 50}" value="50">50</option>
+        </select>
+        <span>/ trang</span>
+    </div>
+
+</div>
+
+<!-- Pagination Styles -->
+<style>
+    .pagination-container {
+        margin: 30px 0;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        align-items: center;
+    }
+
+    .pagination-info {
+        color: #666;
+        font-size: 0.95em;
+    }
+
+    .pagination-info strong {
+        color: #1e3c72;
+    }
+
+    .pagination-controls {
+        display: flex;
+        justify-content: center;
+    }
+
+    .pagination {
+        display: flex;
+        list-style: none;
+        gap: 5px;
+        padding: 0;
+        margin: 0;
+    }
+
+    .pagination li {
+        display: inline-block;
+    }
+
+    .page-link {
+        display: block;
+        padding: 8px 12px;
+        border: 2px solid #e0e0e0;
+        background: white;
+        color: #667eea;
+        text-decoration: none;
+        border-radius: 6px;
+        transition: all 0.3s;
+        min-width: 40px;
+        text-align: center;
+        font-weight: 500;
+    }
+
+    .page-link:hover:not(.disabled) {
+        background: #667eea;
+        color: white;
+        border-color: #667eea;
+        transform: translateY(-2px);
+    }
+
+    .page-link.active {
+        background: #667eea;
+        color: white;
+        border-color: #667eea;
+        font-weight: 700;
+    }
+
+    .page-link.disabled {
+        background: #f5f5f5;
+        color: #ccc;
+        cursor: not-allowed;
+        border-color: #e0e0e0;
+    }
+
+    .pagination li.disabled .page-link {
+        background: #f5f5f5;
+        color: #ccc;
+        cursor: not-allowed;
+    }
+
+    .pagination li.active .page-link {
+        background: #667eea;
+        color: white;
+        border-color: #667eea;
+    }
+
+    .page-size-selector {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 0.95em;
+        color: #666;
+    }
+
+    .page-size-selector select {
+        padding: 6px 12px;
+        border: 2px solid #e0e0e0;
+        border-radius: 6px;
+        background: white;
+        color: #333;
+        cursor: pointer;
+        font-size: 0.95em;
+    }
+
+    .page-size-selector select:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+</style>
+
+<!-- Pagination Scripts -->
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    function changePageSize(newSize) {
+        var currentUrl = new URL(window.location.href);
+        currentUrl.searchParams.set('size', newSize);
+        currentUrl.searchParams.set('page', '0'); // Reset to first page
+        window.location.href = currentUrl.toString();
+    }
+    /*]]>*/
+</script>
+
+</body>
+</html>

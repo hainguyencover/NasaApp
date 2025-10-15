@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NASA - Ảnh của Ngày</title>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>NASA - Ảnh của Ngày với Phân trang</title>
   <style>
     * {
       margin: 0;
@@ -116,7 +116,8 @@
 
     .form-group input[type="text"],
     .form-group input[type="file"],
-    .form-group textarea {
+    .form-group textarea,
+    .form-group select {
       width: 100%;
       padding: 12px;
       border: 2px solid #e0e0e0;
@@ -126,7 +127,8 @@
     }
 
     .form-group input:focus,
-    .form-group textarea:focus {
+    .form-group textarea:focus,
+    .form-group select:focus {
       outline: none;
       border-color: #667eea;
     }
@@ -190,6 +192,53 @@
       font-size: 0.9em;
       color: #666;
       margin-top: 5px;
+    }
+
+    /* Filter and Sort Controls */
+    .filter-controls {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 15px;
+      margin-bottom: 30px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      align-items: center;
+    }
+
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .filter-group label {
+      font-weight: 600;
+      color: #333;
+    }
+
+    .filter-group select,
+    .filter-group input[type="date"] {
+      padding: 8px 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 6px;
+      background: white;
+    }
+
+    .filter-btn {
+      padding: 8px 20px;
+      border: none;
+      border-radius: 6px;
+      background: #667eea;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .filter-btn:hover {
+      background: #5568d3;
+      transform: translateY(-2px);
     }
 
     .comments-section h2 {
@@ -289,7 +338,7 @@
 <div class="container">
   <div class="header">
     <h1>🌌 NASA Astronomy Picture of the Day</h1>
-    <p>Khám phá vũ trụ mỗi ngày với một bức ảnh mới</p>
+    <p>Khám phá vũ trụ mỗi ngày với một bức ảnh mới - Version 2.0 với Phân trang</p>
   </div>
 
   <div class="content">
@@ -301,7 +350,7 @@
     <!-- NASA Image -->
     <div class="image-section">
       <div id="loading">Đang tải ảnh của ngày...</div>
-      <img id="img-of-the-day" style="display:none;" alt="NASA Picture of the Day">
+      <img id="img-of-the-day" style="display:none;" alt="NASA Picture of the Day"/>
     </div>
 
     <!-- Comment Form with Data Binding -->
@@ -309,9 +358,16 @@
       <h2>Đánh giá và Bình luận</h2>
       <form th:action="@{/comment/add}" th:object="${comment}" method="post" enctype="multipart/form-data">
 
+        <!-- Hidden fields to preserve pagination state -->
+        <input type="hidden" name="page" th:value="${currentPage}"/>
+        <input type="hidden" name="size" th:value="${pageSize}"/>
+        <input type="hidden" name="sortBy" th:value="${sortBy}"/>
+        <input type="hidden" name="direction" th:value="${direction}"/>
+        <input type="hidden" name="filter" th:value="${filter}"/>
+
         <div class="form-group">
           <label for="authorName">Tên của bạn:</label>
-          <input type="text" id="authorName" th:field="*{authorName}" placeholder="Nhập tên của bạn">
+          <input type="text" id="authorName" th:field="*{authorName}" placeholder="Nhập tên của bạn"/>
           <div class="error-message" th:if="${#fields.hasErrors('authorName')}" th:errors="*{authorName}"></div>
         </div>
 
@@ -324,7 +380,7 @@
             <button type="button" class="rating-btn" data-rating="4">⭐ 4</button>
             <button type="button" class="rating-btn" data-rating="5">⭐ 5</button>
           </div>
-          <input type="hidden" id="rating" th:field="*{rating}">
+          <input type="hidden" id="rating" th:field="*{rating}"/>
           <div class="error-message" th:if="${#fields.hasErrors('rating')}" th:errors="*{rating}"></div>
         </div>
 
@@ -337,7 +393,7 @@
         <!-- MultipartFile Upload -->
         <div class="form-group">
           <label for="imageFile">Đính kèm ảnh (tùy chọn):</label>
-          <input type="file" id="imageFile" name="imageFile" accept="image/*">
+          <input type="file" id="imageFile" name="imageFile" accept="image/*"/>
           <div class="file-upload-info">Chỉ chấp nhận file ảnh, tối đa 5MB</div>
         </div>
 
@@ -345,50 +401,102 @@
       </form>
     </div>
 
-    <!-- Comments Section -->
-    <div class="comments-section">
-      <h2>Đánh giá hôm nay (<span th:text="${#lists.size(comments)}">0</span>)</h2>
-
-      <div th:if="${#lists.isEmpty(comments)}" class="no-comments">
-        Chưa có đánh giá nào trong ngày hôm nay. Hãy là người đầu tiên! 🚀
+    <!-- Filter and Sort Controls -->
+    <div class="filter-controls">
+      <div class="filter-group">
+        <label for="filterSelect">Hiển thị:</label>
+        <select id="filterSelect" onchange="applyFilter()">
+          <option th:selected="${filter == 'today'}" value="today">Hôm nay</option>
+          <option th:selected="${filter == 'all'}" value="all">Tất cả</option>
+          <option th:selected="${filter == 'date'}" value="date">Theo ngày</option>
+        </select>
       </div>
 
-      <div th:each="c : ${comments}" class="comment-card">
-        <div class="comment-header">
-          <span class="comment-author" th:text="${c.authorName}">Author</span>
-          <span class="comment-rating">
-                            <span th:each="i : ${#numbers.sequence(1, c.rating)}">⭐</span>
-                        </span>
-        </div>
-        <div class="comment-text" th:text="${c.commentText}">Comment text</div>
+      <div class="filter-group" id="dateFilterGroup" th:style="${filter == 'date' ? 'display: flex;' : 'display: none;'}">
+        <label for="dateFilter">Ngày:</label>
+        <input type="date" id="dateFilter" th:value="${selectedDate}"/>
+      </div>
 
-        <!-- Display uploaded image if exists -->
-        <img th:if="${c.imagePath}"
-             th:src="@{'/uploads/' + ${c.imagePath}}"
-             class="comment-image"
-             alt="User uploaded image">
+      <div class="filter-group">
+        <label for="sortSelect">Sắp xếp:</label>
+        <select id="sortSelect" onchange="applyFilter()">
+          <option th:selected="${sortBy == 'createdAt' and direction == 'DESC'}" value="createdAt-DESC">Mới nhất</option>
+          <option th:selected="${sortBy == 'createdAt' and direction == 'ASC'}" value="createdAt-ASC">Cũ nhất</option>
+          <option th:selected="${sortBy == 'likes'}" value="likes-DESC">Nhiều like nhất</option>
+          <option th:selected="${sortBy == 'rating' and direction == 'DESC'}" value="rating-DESC">Đánh giá cao nhất</option>
+          <option th:selected="${sortBy == 'rating' and direction == 'ASC'}" value="rating-ASC">Đánh giá thấp nhất</option>
+        </select>
+      </div>
 
-        <div class="comment-footer">
-                        <span class="comment-time">
-                            <span th:text="${c.createdAt.hour}">00</span>:<span th:text="${c.createdAt.minute < 10 ? '0' + c.createdAt.minute : c.createdAt.minute}">00</span>
-                        </span>
-          <div class="comment-actions">
-            <!-- Like Button -->
-            <form th:action="@{/comment/like}" method="post" style="display:inline;">
-              <input type="hidden" name="commentId" th:value="${c.id}">
-              <button type="submit" class="like-btn">
-                ❤️ <span th:text="${c.likeCount}">0</span>
-              </button>
-            </form>
+      <button type="button" class="filter-btn" onclick="applyFilter()">Áp dụng</button>
+      <button type="button" class="filter-btn" onclick="resetFilter()">Đặt lại</button>
+    </div>
 
-            <!-- Delete Button -->
-            <form th:action="@{'/comment/delete/' + ${c.id}}" method="post" style="display:inline;">
-              <button type="submit" class="delete-btn" onclick="return confirm('Bạn có chắc muốn xóa bình luận này?')">
-                🗑️ Xóa
-              </button>
-            </form>
+    <!-- Comments Section -->
+    <div class="comments-section">
+      <h2>
+        Danh sách đánh giá
+        <span th:if="${filter == 'today'}">(Hôm nay)</span>
+        <span th:if="${filter == 'date' and selectedDate != null}" th:text="'(' + ${#temporals.format(selectedDate, 'dd/MM/yyyy')} + ')'"></span>
+      </h2>
+
+      <div th:if="${commentPage.totalElements == 0}" class="no-comments">
+        Chưa có đánh giá nào. Hãy là người đầu tiên! 🚀
+      </div>
+
+      <div th:if="${commentPage.hasContent()}">
+        <!-- Comment Cards -->
+        <div th:each="c : ${commentPage.content}" class="comment-card">
+          <div class="comment-header">
+            <span class="comment-author" th:text="${c.authorName}">Author</span>
+            <span class="comment-rating">
+                                <th:block th:each="i : ${#numbers.sequence(1, c.rating)}">⭐</th:block>
+                            </span>
+          </div>
+          <div class="comment-text" th:text="${c.commentText}">Comment text</div>
+
+          <!-- Display uploaded image if exists -->
+          <img th:if="${c.imagePath != null and c.imagePath != ''}"
+               th:src="@{'/uploads/' + ${c.imagePath}}"
+               class="comment-image"
+               alt="User uploaded image"/>
+
+          <div class="comment-footer">
+                            <span class="comment-time">
+                                <th:block th:text="${c.createdAt.hour}">00</th:block>:<th:block th:text="${c.createdAt.minute < 10 ? '0' + c.createdAt.minute : c.createdAt.minute}">00</th:block>
+                                - <th:block th:text="${#temporals.format(c.commentDate, 'dd/MM/yyyy')}">date</th:block>
+                            </span>
+            <div class="comment-actions">
+              <!-- Like Button -->
+              <form th:action="@{/comment/like}" method="post" style="display:inline;">
+                <input type="hidden" name="commentId" th:value="${c.id}"/>
+                <input type="hidden" name="page" th:value="${currentPage}"/>
+                <input type="hidden" name="size" th:value="${pageSize}"/>
+                <input type="hidden" name="sortBy" th:value="${sortBy}"/>
+                <input type="hidden" name="direction" th:value="${direction}"/>
+                <input type="hidden" name="filter" th:value="${filter}"/>
+                <button type="submit" class="like-btn">
+                  ❤️ <span th:text="${c.likeCount}">0</span>
+                </button>
+              </form>
+
+              <!-- Delete Button -->
+              <form th:action="@{'/comment/delete/' + ${c.id}}" method="post" style="display:inline;">
+                <input type="hidden" name="page" th:value="${currentPage}"/>
+                <input type="hidden" name="size" th:value="${pageSize}"/>
+                <input type="hidden" name="sortBy" th:value="${sortBy}"/>
+                <input type="hidden" name="direction" th:value="${direction}"/>
+                <input type="hidden" name="filter" th:value="${filter}"/>
+                <button type="submit" class="delete-btn" onclick="return confirm('Bạn có chắc muốn xóa bình luận này?')">
+                  🗑️ Xóa
+                </button>
+              </form>
+            </div>
           </div>
         </div>
+
+        <!-- Pagination Component -->
+        <div th:replace="~{pagination :: pagination(${commentPage}, '/')}"></div>
       </div>
     </div>
   </div>
@@ -397,16 +505,16 @@
 <script th:inline="javascript">
   /*<![CDATA[*/
   // Load NASA APOD
-  const nasaApiKey = /*[[${nasaApiKey}]]*/ '';
-  const nasaApiUrl = /*[[${nasaApiUrl}]]*/ '';
-  let query = nasaApiUrl + '?api_key=' + nasaApiKey;
+  var nasaApiKey = /*[[${nasaApiKey}]]*/ '';
+  var nasaApiUrl = /*[[${nasaApiUrl}]]*/ '';
+  var query = nasaApiUrl + '?api_key=' + nasaApiKey;
 
-  let request = new XMLHttpRequest();
+  var request = new XMLHttpRequest();
   request.open('GET', query);
   request.onload = function() {
     if (request.status === 200) {
-      let response = JSON.parse(request.responseText);
-      let img = document.getElementById('img-of-the-day');
+      var response = JSON.parse(request.responseText);
+      var img = document.getElementById('img-of-the-day');
       img.setAttribute('src', response.url);
       img.style.display = 'block';
       document.getElementById('loading').style.display = 'none';
@@ -415,26 +523,69 @@
   request.send();
 
   // Rating buttons
-  const ratingBtns = document.querySelectorAll('.rating-btn');
-  const ratingInput = document.getElementById('rating');
+  var ratingBtns = document.querySelectorAll('.rating-btn');
+  var ratingInput = document.getElementById('rating');
 
-  ratingBtns.forEach(btn => {
+  ratingBtns.forEach(function(btn) {
     btn.addEventListener('click', function() {
-      ratingBtns.forEach(b => b.classList.remove('active'));
+      ratingBtns.forEach(function(b) {
+        b.classList.remove('active');
+      });
       this.classList.add('active');
-      ratingInput.value = this.dataset.rating;
+      ratingInput.value = this.getAttribute('data-rating');
     });
   });
 
   // Set active rating if exists
-  const currentRating = ratingInput.value;
+  var currentRating = ratingInput.value;
   if (currentRating) {
-    ratingBtns.forEach(btn => {
-      if (btn.dataset.rating === currentRating) {
+    ratingBtns.forEach(function(btn) {
+      if (btn.getAttribute('data-rating') === currentRating) {
         btn.classList.add('active');
       }
     });
   }
+
+  // Filter functions
+  function applyFilter() {
+    var filterValue = document.getElementById('filterSelect').value;
+    var sortValue = document.getElementById('sortSelect').value;
+    var sortParts = sortValue.split('-');
+    var sortBy = sortParts[0];
+    var direction = sortParts[1];
+
+    var url = new URL(window.location.href);
+    url.searchParams.set('page', '0'); // Reset to first page
+    url.searchParams.set('filter', filterValue);
+    url.searchParams.set('sortBy', sortBy);
+    url.searchParams.set('direction', direction);
+
+    // Add date parameter if filter is 'date'
+    if (filterValue === 'date') {
+      var dateValue = document.getElementById('dateFilter').value;
+      if (dateValue) {
+        url.searchParams.set('date', dateValue);
+      }
+    } else {
+      url.searchParams.delete('date');
+    }
+
+    window.location.href = url.toString();
+  }
+
+  function resetFilter() {
+    window.location.href = '/';
+  }
+
+  // Show/hide date filter based on filter selection
+  document.getElementById('filterSelect').addEventListener('change', function() {
+    var dateGroup = document.getElementById('dateFilterGroup');
+    if (this.value === 'date') {
+      dateGroup.style.display = 'flex';
+    } else {
+      dateGroup.style.display = 'none';
+    }
+  });
   /*]]>*/
 </script>
 </body>
